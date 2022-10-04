@@ -56,7 +56,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn basics() {
+    fn basics_bad_stack() {
         let mut list = List::new();
 
         // populating list
