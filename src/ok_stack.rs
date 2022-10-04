@@ -50,20 +50,20 @@ impl<T> List<T> {
     }
 }
 
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        while let Some(boxed_node) = self.head.take() {
+            self.head = boxed_node.next;
+        }
+    }
+}
+
 pub struct IntoIter<T>(List<T>);
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.pop()
-    }
-}
-
-impl<T> Drop for List<T> {
-    fn drop(&mut self) {
-        while let Some(boxed_node) = self.head.take() {
-            self.head = boxed_node.next;
-        }
     }
 }
 
