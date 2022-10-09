@@ -102,13 +102,21 @@ impl<T> List<T> {
             RefMut::map(wrapped_node.borrow_mut(), |node| &mut node.elem) 
         })
     }
+}
 
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
+impl<T> Drop for List<T> {
+    fn drop(&mut self) {
+        while self.pop_front().is_some() {}
     }
 }
 
 pub struct IntoIter<T>(List<T>);
+
+impl<T> List<T> {
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter(self)
+    }
+}
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
@@ -131,11 +139,6 @@ impl<T> Node<T> {
     }
 }
 
-impl<T> Drop for List<T> {
-    fn drop(&mut self) {
-        while self.pop_front().is_some() {}
-    }
-}
 
 #[cfg(test)]
 mod test {
