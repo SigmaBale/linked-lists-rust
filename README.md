@@ -4,4 +4,4 @@ Various examples of linked lists that you learn to build from [Learning Rust Wit
 
 ## A Bad Stack
 
-This is example of a singly-linked list with a bad stack, module `bad_sinly_linked.rs`.
+This is example of a singly-linked list with a bad stack, module `bad_singly_linked.rs`.
