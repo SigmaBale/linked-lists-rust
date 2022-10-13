@@ -17,3 +17,7 @@ Singly-linked list using reference-counted pointers Rc, module [`rc_singly_linke
 ## Bad Deque
 
 Doubly-linked list (stores head and tail of the list) using Rc and RefCell (interior mutability), module [`bad_deque.rs`](https://github.com/SigmaBale/linked-lists-rust/blob/main/src/bad_deque.rs).
+
+## Ok Queue (unsafe)
+
+...
