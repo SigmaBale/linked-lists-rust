@@ -1,4 +1,5 @@
 use std::ptr;
+use std::marker::PhantomData;
 
 struct Node<T> {
     elem: T,
@@ -23,7 +24,9 @@ impl<T> List<T> {
         ));
 
         if !self.tail.is_null() {
-            unsafe { (*self.tail).next = new_tail }
+            unsafe { 
+                (*self.tail).next = new_tail 
+            }
         }else {
             self.head = new_tail
         }
@@ -47,6 +50,36 @@ impl<T> List<T> {
             None
         }
     }
+
+    pub fn peek(&self) -> Option<&'_ T> {
+        if self.head.is_null() { None }
+        else {
+            unsafe {
+                Some(&(*self.head).elem)
+            }
+        }
+    }
+
+    pub fn peek_mut(&mut self) -> Option<&'_ mut T> {
+        if self.head.is_null() { None }
+        else {
+            unsafe {
+                Some(&mut(*self.head).elem)
+            }
+        }
+    }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter { next: self }
+    }
+
+    pub fn iter(&self) -> Iter<'_, T> {
+        Iter { next: self.head, _marker: PhantomData }
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut { next: self.head, _marker: PhantomData }
+    }
 }
 
 impl<T> Drop for List<T> {
@@ -55,11 +88,56 @@ impl<T> Drop for List<T> {
     }
 }
 
+pub struct IntoIter<T> {
+    next: List<T>
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.next.pop().map(|val| val)
+    }
+}
+
+pub struct Iter<'a, T: 'a> {
+    next: *mut Node<T>,
+    _marker: PhantomData<&'a T>
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            self.next.as_ref().map(|node| {
+                self.next = node.next;
+                &node.elem
+            })
+        }
+    }
+}
+
+pub struct IterMut<'a, T: 'a> {
+    next: *mut Node<T>,
+    _marker: PhantomData<&'a mut T>
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            self.next.as_mut().map(|node| {
+                self.next = node.next;
+                &mut node.elem
+            })
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::List;
     #[test]
-    fn basics() {
+    fn basics_ok_queue_unsafe() {
         let mut list = List::new();
 
         assert_eq!(list.pop(), None);
@@ -87,4 +165,121 @@ mod test {
         assert_eq!(list.pop(), Some(7));
         assert_eq!(list.pop(), None);
     }
+
+    #[test]
+    fn iter_ok_queue_unsafe() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+        list.push(4);
+
+        let mut iter = list.iter();
+
+        // Check return values
+        assert_eq!(iter.next(), Some(&1));
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), Some(&3));
+        assert_eq!(iter.next(), Some(&4));
+
+        // Check exhaustion
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next(), None);
+    }
+
+    fn iter_mut_ok_queue_unsafe() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+        list.push(4);
+
+        let mut iter_mut = list.iter_mut();
+
+        // Check return values
+        assert_eq!(iter_mut.next(), Some(&mut 1));
+        assert_eq!(iter_mut.next(), Some(&mut 2));
+        assert_eq!(iter_mut.next(), Some(&mut 3));
+        assert_eq!(iter_mut.next(), Some(&mut 4));
+
+        // Check exhaustion
+        assert_eq!(iter_mut.next(), None);
+        assert_eq!(iter_mut.next(), None);
+    }
+
+    #[test]
+    fn into_iter_ok_queue_unsafe() {
+        let mut list = List::new();
+        list.push(1);
+        list.push(2);
+        list.push(3);
+        list.push(4);
+
+        let mut into_iter = list.into_iter();
+
+        // Check return values
+        assert_eq!(into_iter.next(), Some(1));
+        assert_eq!(into_iter.next(), Some(2));
+        assert_eq!(into_iter.next(), Some(3));
+        assert_eq!(into_iter.next(), Some(4));
+
+        // Check exhaustion
+        assert_eq!(into_iter.next(), None);
+        assert_eq!(into_iter.next(), None);
+    }
+
+    #[test]
+    fn peek_and_peek_mut_ok_queue_unsafe() {
+        let mut list = List::new();
+        
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
+        assert_eq!(list.peek(), Some(&1));
+        assert_eq!(list.peek_mut(), Some(&mut 1));
+
+        list.pop();
+        list.pop();
+        list.pop();
+
+        assert_eq!(list.peek(), None);
+        assert_eq!(list.peek_mut(), None);
+    }
+}
+
+#[test]
+fn miri_mixup_ok_queue_unsafe() {
+    let mut list = List::new();
+
+    list.push(1);
+    list.push(2);
+    list.push(3);
+
+    assert!(list.pop() == Some(1));
+    list.push(4);
+    assert!(list.pop() == Some(2));
+    list.push(5);
+
+    assert!(list.peek() == Some(&3));
+    list.push(6);
+    list.peek_mut().map(|x| *x *= 10);
+    assert!(list.peek() == Some(&30));
+    assert!(list.pop() == Some(30));
+
+    for elem in list.iter_mut() {
+        *elem *= 100;
+    }
+
+    let mut iter = list.iter();
+    assert_eq!(iter.next(), Some(&400));
+    assert_eq!(iter.next(), Some(&500));
+    assert_eq!(iter.next(), Some(&600));
+    assert_eq!(iter.next(), None);
+    assert_eq!(iter.next(), None);
+
+    assert!(list.pop() == Some(400));
+    list.peek_mut().map(|x| *x *= 10);
+    assert!(list.peek() == Some(&5000));
+    list.push(7);
 }
