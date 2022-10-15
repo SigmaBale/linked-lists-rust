@@ -20,4 +20,8 @@ Doubly-linked list (stores head and tail of the list) using Rc and RefCell (inte
 
 ## Ok Queue (unsafe)
 
-Singly-linked queue type list that uses unsafe code and also does not break [Stacked Borrows Aliasing model](https://plv.mpi-sws.org/rustbelt/stacked-borrows/), module [`ok_queue_unsafe.rs`](https://github.com/SigmaBale/linked-lists-rust/blob/main/src/ok_queue_unsafe.rs)
+Singly-linked queue type list that uses unsafe code and also does not break [Stacked Borrows Aliasing model](https://plv.mpi-sws.org/rustbelt/stacked-borrows/), module [`ok_queue_unsafe.rs`](https://github.com/SigmaBale/linked-lists-rust/blob/main/src/ok_queue_unsafe.rs).
+
+## Linked List (doubly-linked-deque)
+
+Production ready Linked List, module [`production_queue_unsafe.rs`](https://github.com/SigmaBale/linked-lists-rust/blob/main/src/production_queue_unsafe.rs).
