@@ -70,7 +70,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn basics_rc_singly_linked() {
+    fn test_basics_rc_singly_linked() {
         let list = List::new();
         assert_eq!(list.head(), None);
 
@@ -91,7 +91,7 @@ mod test {
     }
 
     #[test]
-    fn iter_rc_singly_linked() {
+    fn test_iter_rc_singly_linked() {
         let list = List::new().prepend(1).prepend(2).prepend(3);
 
         let mut iter = list.iter();

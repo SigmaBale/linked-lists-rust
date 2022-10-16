@@ -56,7 +56,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn basics_bad_singly_linked() {
+    fn test_basics_bad_singly_linked() {
         let mut list = List::new();
 
         // populating list

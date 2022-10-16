@@ -145,7 +145,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn basics_front_bad_deque() {
+    fn test_basics_front_bad_deque() {
         let mut list = List::new();
 
         assert_eq!(list.pop_front(), None);
@@ -168,7 +168,7 @@ mod test {
     }
 
     #[test]
-    fn basics_back_bad_deque() {
+    fn test_basics_back_bad_deque() {
         let mut list = List::new();
 
         assert_eq!(list.pop_back(), None);
@@ -191,7 +191,7 @@ mod test {
     }
 
     #[test]
-    fn peek_front_bad_deque() {
+    fn test_peek_front_bad_deque() {
         let mut list = List::new();
 
         list.push_front(1); 
@@ -202,7 +202,7 @@ mod test {
     }
 
     #[test]
-    fn peek_back_bad_deque() {
+    fn test_peek_back_bad_deque() {
         let mut list = List::new();
 
         list.push_front(1); 
@@ -213,7 +213,7 @@ mod test {
     }
 
     #[test]
-    fn peek_front_mut_bad_deque() {
+    fn test_peek_front_mut_bad_deque() {
         let mut list = List::new();
 
         list.push_front(1); 
@@ -224,7 +224,7 @@ mod test {
     }
 
     #[test]
-    fn peek_back_mut_bad_deque() {
+    fn test_peek_back_mut_bad_deque() {
         let mut list = List::new();
 
         list.push_front(1); 
@@ -235,7 +235,7 @@ mod test {
     }
 
     #[test]
-    fn into_iter_bad_deque() {
+    fn test_into_iter_bad_deque() {
         let mut list = List::new();
         list.push_front(1); list.push_front(2); list.push_front(3);
 

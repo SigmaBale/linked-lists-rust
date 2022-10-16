@@ -82,7 +82,6 @@ impl<T> LinkedList<T> {
                     self.front = None;
                 }
                 self.len -= 1;
-
                 old_back.elem
             })
         }
@@ -90,21 +89,69 @@ impl<T> LinkedList<T> {
     
     pub fn pop_front(&mut self) -> Option<T> {
         unsafe {
-            self.back.map(|node| { 
+            self.front.map(|node| { 
                 let old_front = Box::from_raw(node.as_ptr());
 
                 self.front = old_front.back;
 
-                if let Some(new) = self.back {
+                if let Some(new) = self.front {
                     (*new.as_ptr()).front = None;
                 }else {
                     self.back = None;
                 }
                 self.len -= 1;
-
                 old_front.elem
             })
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+}
+
+#[cfg(test)]
+mod test {
+    use super::LinkedList;
+
+    #[test]
+    fn test_basic_front_production_queue_unsafe() {
+        let mut list = LinkedList::new();
+
+        // Try to break an empty list
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
+
+        // Try to break a one item list
+        list.push_front(10);
+        assert_eq!(list.len(), 1);
+        assert_eq!(list.pop_front(), Some(10));
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
+
+        // Mess around
+        list.push_front(10);
+        assert_eq!(list.len(), 1);
+        list.push_front(20);
+        assert_eq!(list.len(), 2);
+        list.push_front(30);
+        assert_eq!(list.len(), 3);
+        assert_eq!(list.pop_front(), Some(30));
+        assert_eq!(list.len(), 2);
+        list.push_front(40);
+        assert_eq!(list.len(), 3);
+        assert_eq!(list.pop_front(), Some(40));
+        assert_eq!(list.len(), 2);
+        assert_eq!(list.pop_front(), Some(20));
+        assert_eq!(list.len(), 1);
+        assert_eq!(list.pop_front(), Some(10));
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.len(), 0);
+    }
 }

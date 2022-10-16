@@ -101,7 +101,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn basics_ok_singly_linked() {
+    fn test_basics_ok_singly_linked() {
         let mut list = List::new();
 
         // populating list
@@ -130,7 +130,7 @@ mod test {
     }
 
     #[test]
-    fn peek_ok_singly_linked() {
+    fn test_peek_ok_singly_linked() {
         let mut list = List::new();
         assert_eq!(list.peek(), None);
         assert_eq!(list.peek_mut(), None);
@@ -148,7 +148,7 @@ mod test {
     }
 
     #[test]
-    fn into_iterator_ok_singly_linked() {
+    fn test_into_iterator_ok_singly_linked() {
         let mut list = List::new();
         list.push(1); list.push(2); list.push(3);
 
@@ -161,7 +161,7 @@ mod test {
     }
 
     #[test]
-    fn iter_ok_singly_linked() {
+    fn test_iter_ok_singly_linked() {
         let mut list = List::new();
         list.push(1); list.push(2); list.push(3);
     
@@ -172,7 +172,7 @@ mod test {
     }
 
     #[test]
-    fn iter_mut_ok_singly_linked() {
+    fn test_iter_mut_ok_singly_linked() {
         let mut list = List::new();
         list.push(1); list.push(2); list.push(3);
 

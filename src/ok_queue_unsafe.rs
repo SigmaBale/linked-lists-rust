@@ -137,7 +137,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 mod test {
     use super::List;
     #[test]
-    fn basics_ok_queue_unsafe() {
+    fn test_basics_ok_queue_unsafe() {
         let mut list = List::new();
 
         assert_eq!(list.pop(), None);
@@ -167,7 +167,7 @@ mod test {
     }
 
     #[test]
-    fn iter_ok_queue_unsafe() {
+    fn test_iter_ok_queue_unsafe() {
         let mut list = List::new();
         list.push(1);
         list.push(2);
@@ -188,7 +188,7 @@ mod test {
     }
 
     #[test]
-    fn iter_mut_ok_queue_unsafe() {
+    fn test_iter_mut_ok_queue_unsafe() {
         let mut list = List::new();
         list.push(1);
         list.push(2);
@@ -209,7 +209,7 @@ mod test {
     }
 
     #[test]
-    fn into_iter_ok_queue_unsafe() {
+    fn test_into_iter_ok_queue_unsafe() {
         let mut list = List::new();
         list.push(1);
         list.push(2);
@@ -230,7 +230,7 @@ mod test {
     }
 
     #[test]
-    fn peek_and_peek_mut_ok_queue_unsafe() {
+    fn test_peek_and_peek_mut_ok_queue_unsafe() {
         let mut list = List::new();
         
         list.push(1);
@@ -249,7 +249,7 @@ mod test {
     }
 
     #[test]
-    fn miri_mixup_ok_queue_unsafe() {
+    fn test_miri_mixup_ok_queue_unsafe() {
         let mut list = List::new();
 
         list.push(1);
