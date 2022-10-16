@@ -132,6 +132,30 @@ impl<T> LinkedList<T> {
             self.back.map(|node| &mut (*node.as_ptr()).elem)
         }
     }
+
+    pub fn into_iter(self) -> IntoIter<T> {
+        IntoIter { 
+            list: self 
+        }
+    }
+
+    pub fn iter(&self) -> Iter<'_, T> {
+        Iter { 
+            front: self.front, 
+            back: self.back, 
+            len: self.len, 
+            _marker: PhantomData 
+        }
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+        IterMut { 
+            front: self.front, 
+            back: self.back, 
+            len: self.len, 
+            _marker: PhantomData 
+        }
+    }
 }
 
 impl<T> Drop for LinkedList<T> {
@@ -145,6 +169,15 @@ pub struct Iter<'a, T> {
     back: Link<T>,
     len: usize,
     _marker: PhantomData<&'a T>
+}
+
+impl<'a, T> IntoIterator for &'a LinkedList<T> {
+    type Item = &'a T;
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -186,11 +219,20 @@ impl<'a, T> ExactSizeIterator for Iter<'a, T> {
     }
 }
 
-pub struct IntoIterator<T> {
+pub struct IntoIter<T> {
     list: LinkedList<T>
 }
 
-impl<T> Iterator for IntoIterator<T> {
+impl<T> IntoIterator for LinkedList<T> {
+    type Item = T;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.into_iter()
+    }
+}
+
+impl<T> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
         self.list.pop_back()
@@ -201,13 +243,13 @@ impl<T> Iterator for IntoIterator<T> {
     }
 }
 
-impl<T> DoubleEndedIterator for IntoIterator<T> {
+impl<T> DoubleEndedIterator for IntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.list.pop_front()
     }
 }
 
-impl<T> ExactSizeIterator for IntoIterator<T> {
+impl<T> ExactSizeIterator for IntoIter<T> {
     fn len(&self) -> usize {
         self.list.len
     }
@@ -218,6 +260,15 @@ pub struct IterMut<'a, T> {
     back: Link<T>,
     len: usize,
     _marker: PhantomData<&'a mut T>
+}
+
+impl<'a, T> IntoIterator for &'a mut LinkedList<T> {
+    type Item = &'a mut T;
+    type IntoIter = IterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {
