@@ -1,5 +1,4 @@
-use std::ptr::{self, NonNull};
-use std::mem;
+use std::ptr::NonNull;
 use std::marker::PhantomData;
 
 type Link<T> = Option<NonNull<Node<T>>>;
