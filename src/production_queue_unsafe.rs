@@ -109,7 +109,156 @@ impl<T> LinkedList<T> {
         self.len
     }
 
+    pub fn front(&self) -> Option<&T> {
+        unsafe { 
+            Some(&(*self.front?.as_ptr()).elem)
+        }
+    }
+    
+    pub fn back(&self) -> Option<&T> {
+        unsafe { 
+            Some(&(*self.back?.as_ptr()).elem)
+        }
+    }
+    
+    pub fn front_mut(&self) -> Option<&mut T> {
+        unsafe {
+            self.front.map(|node| &mut (*node.as_ptr()).elem)
+        }
+    }
+
+    pub fn back_mut(&self) -> Option<&mut T> {
+        unsafe {
+            self.back.map(|node| &mut (*node.as_ptr()).elem)
+        }
+    }
 }
+
+impl<T> Drop for LinkedList<T> {
+    fn drop(&mut self) {
+        while let Some(_) = self.pop_front() {}
+    }
+}
+
+pub struct Iter<'a, T> {
+    front: Link<T>,
+    back: Link<T>,
+    len: usize,
+    _marker: PhantomData<&'a T>
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.back.map(|node| unsafe {
+                self.back = (*node.as_ptr()).front;
+                self.len -= 1;
+                &(*node.as_ptr()).elem
+            })
+        }else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.len, Some(self.len))
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for Iter<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.front.map(|node| unsafe {
+                self.front = (*node.as_ptr()).back;
+                self.len -= 1;
+                &(*node.as_ptr()).elem
+            })
+        }else {
+            None
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for Iter<'a, T> {
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
+pub struct IntoIterator<T> {
+    list: LinkedList<T>
+}
+
+impl<T> Iterator for IntoIterator<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.list.pop_back()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.list.len, Some(self.list.len))
+    }
+}
+
+impl<T> DoubleEndedIterator for IntoIterator<T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.list.pop_front()
+    }
+}
+
+impl<T> ExactSizeIterator for IntoIterator<T> {
+    fn len(&self) -> usize {
+        self.list.len
+    }
+}
+
+pub struct IterMut<'a, T> {
+    front: Link<T>,
+    back: Link<T>,
+    len: usize,
+    _marker: PhantomData<&'a mut T>
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.back.map(|node| unsafe {
+                self.back = (*node.as_ptr()).front;
+                self.len -= 1;
+                &mut (*node.as_ptr()).elem
+            })
+        }else {
+            None
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (self.len, Some(self.len))
+    }
+}
+
+impl<'a, T> DoubleEndedIterator for IterMut<'a, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.len > 0 {
+            self.back.map(|node| unsafe {
+                self.back = (*node.as_ptr()).front;
+                self.len -= 1;
+                &mut (*node.as_ptr()).elem
+            })
+        }else {
+            None
+        }
+    }
+}
+
+impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
+    fn len(&self) -> usize {
+        self.len
+    }
+}
+
 
 #[cfg(test)]
 mod test {
@@ -119,12 +268,10 @@ mod test {
     fn test_basic_front_production_queue_unsafe() {
         let mut list = LinkedList::new();
 
-        // Try to break an empty list
         assert_eq!(list.len(), 0);
         assert_eq!(list.pop_front(), None);
         assert_eq!(list.len(), 0);
 
-        // Try to break a one item list
         list.push_front(10);
         assert_eq!(list.len(), 1);
         assert_eq!(list.pop_front(), Some(10));
@@ -132,7 +279,6 @@ mod test {
         assert_eq!(list.pop_front(), None);
         assert_eq!(list.len(), 0);
 
-        // Mess around
         list.push_front(10);
         assert_eq!(list.len(), 1);
         list.push_front(20);
