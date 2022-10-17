@@ -1,5 +1,8 @@
+use std::hash::{Hash, Hasher};
 use std::ptr::NonNull;
 use std::marker::PhantomData;
+use std::fmt::{Debug, Result, Formatter};
+use std::cmp::Ordering;
 
 type Link<T> = Option<NonNull<Node<T>>>;
 
@@ -155,6 +158,14 @@ impl<T> LinkedList<T> {
             _marker: PhantomData 
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn clear(&mut self) {
+        while let Some(_) = self.pop_back() {}
+    }
 }
 
 impl<T> Drop for LinkedList<T> {
@@ -309,6 +320,75 @@ impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
     }
 }
 
+impl<T> Default for LinkedList<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T: Clone> Clone for LinkedList<T> {
+    fn clone(&self) -> Self {
+        let mut new_list = Self::new();
+        for item in self {
+            new_list.push_back(item.clone());
+        }
+        new_list
+    }
+}
+
+impl<T> Extend<T> for LinkedList<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for item in iter {
+            self.push_back(item);
+        }
+    }
+}
+
+impl<T> FromIterator<T> for LinkedList<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut new_list = Self::new();
+        new_list.extend(iter);
+        new_list
+    }
+}
+
+impl<T: Debug> Debug for LinkedList<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        f.debug_list().entries(self).finish()
+    }
+}
+
+impl<T: PartialEq> PartialEq for LinkedList<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.len == other.len && self.iter().eq(other)
+    }
+    fn ne(&self, other: &Self) -> bool {
+        self.len != other.len || self.iter().ne(other) 
+    }
+}
+
+impl<T: Eq> Eq for LinkedList<T> {}
+
+impl<T: PartialOrd> PartialOrd for LinkedList<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.iter().partial_cmp(other)
+    }
+}
+
+impl<T: Ord> Ord for LinkedList<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.iter().cmp(other)
+    }
+}
+
+impl<T: Hash> Hash for LinkedList<T> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.len().hash(state);
+        for item in self {
+            item.hash(state);
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {
