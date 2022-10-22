@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 struct Node<T> {
     element: T,
     next: Link<T>

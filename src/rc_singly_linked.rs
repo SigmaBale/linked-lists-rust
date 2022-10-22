@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::rc::Rc;
 
 type Link<T> = Option<Rc<Node<T>>>;

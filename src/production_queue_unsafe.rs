@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::hash::{Hash, Hasher};
 use std::ptr::NonNull;
 use std::marker::PhantomData;
