@@ -167,6 +167,10 @@ impl<T> LinkedList<T> {
     pub fn clear(&mut self) {
         while let Some(_) = self.pop_back() {}
     }
+
+    pub fn cursor_mut(&mut self) -> CursorMut<T> {
+        CursorMut { node: None, list: self, index: None }
+    }
 }
 
 impl<T> Drop for LinkedList<T> {
@@ -390,6 +394,74 @@ impl<T: Hash> Hash for LinkedList<T> {
         }
     }
 }
+
+unsafe impl<T: Send> Send for LinkedList<T> {}
+unsafe impl<T: Sync> Sync for LinkedList<T> {}
+
+unsafe impl<T: Send> Send for Iter<'_, T> {}
+unsafe impl<T: Sync> Sync for Iter<'_, T> {}
+
+unsafe impl<T: Send> Send for IterMut<'_, T> {}
+unsafe impl<T: Sync> Sync for IterMut<'_, T> {}
+
+pub struct CursorMut<'a, T> {
+    node: Link<T>,
+    list: &'a mut LinkedList<T>,
+    index: Option<usize>
+}
+
+impl<T> CursorMut<'_, T> {
+    pub fn index(&self) -> Option<usize> {
+        self.index
+    }
+
+    pub fn move_next(&mut self) {
+        if let Some(node) = self.node {
+            unsafe { 
+                self.node = (*node.as_ptr()).back 
+            }
+            if self.node.is_some() {
+                *self.index.as_mut().unwrap() += 1;
+            }else {
+                self.index = None;
+            }
+        }else if !self.list.is_empty() {
+            self.node = self.list.front;
+            self.index = Some(0);
+        }else {
+            return;
+        }
+    }
+
+    pub fn move_back(&mut self) {
+        if let Some(node) = self.node {
+            unsafe { 
+                self.node = (*node.as_ptr()).front 
+            }
+            if self.node.is_some() {
+                *self.index.as_mut().unwrap() -= 1;
+            }else {
+                self.index = None;
+            }
+        }else if !self.list.is_empty() {
+            self.node = self.list.back;
+            self.index = Some(self.list.len - 1);
+        }else {
+            return;
+        }
+    }
+}
+
+/// Doc test that will fail in order to prove that `IterMut<'_, T>` is invariant,
+/// meaning we can't change the lifetime of our type `T` because we "contain" `&mut`
+/// reference to `T` as marked with `_marker` field (`PhantomData<&mut T>`) making our type invariant.
+///
+/// ```compile_fail
+/// use linked_lists_rust::production_queue_unsafe::IterMut;
+/// 
+/// fn iter_mut_covariant<'i, 'a, T>(x: IterMut<'i, &'static T>) -> IterMut<'i, &'a T> { x }
+/// ```
+fn iter_mut_invariant() {}
 
 #[cfg(test)]
 mod test {
