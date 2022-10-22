@@ -24,4 +24,4 @@ Singly-linked queue type list that uses unsafe code and also does not break [Sta
 
 ## Linked List (doubly-linked-deque)
 
-Production ready Linked List, module [`production_queue_unsafe.rs`](https://github.com/SigmaBale/linked-lists-rust/blob/main/src/production_queue_unsafe.rs).
+Production ready Linked List, module [`production_queue_unsafe.rs`](https://github.com/SigmaBale/linked-lists-rust/blob/main/src/production_queue_unsafe.rs). (In progres...)
