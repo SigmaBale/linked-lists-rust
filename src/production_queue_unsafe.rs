@@ -450,6 +450,24 @@ impl<T> CursorMut<'_, T> {
             return;
         }
     }
+
+    pub fn current(&mut self) -> Option<&mut T> {
+        self.node.map(|node| unsafe { &mut(*node.as_ptr()).elem })
+    }
+
+    pub fn peek_next(&mut self) -> Option<&mut T> {
+        self.node.and_then(|node| 
+            unsafe {
+                (*node.as_ptr()).back.map(|node| &mut (*node.as_ptr()).elem)
+            })
+    }
+
+    pub fn peek_prev(&mut self) -> Option<&mut T> {
+        self.node.and_then(|node| 
+            unsafe {
+                (*node.as_ptr()).front.map(|node| &mut (*node.as_ptr()).elem)
+            })
+    }
 }
 
 /// Doc test that will fail in order to prove that `IterMut<'_, T>` is invariant,
