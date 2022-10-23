@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use std::mem;
 use std::hash::{Hash, Hasher};
 use std::ptr::NonNull;
 use std::marker::PhantomData;
@@ -468,11 +469,69 @@ impl<T> CursorMut<'_, T> {
                 (*node.as_ptr()).front.map(|node| &mut (*node.as_ptr()).elem)
             })
     }
+
+    pub fn split_before(&mut self) -> LinkedList<T> {
+        if let Some(current) = self.node {    
+            unsafe {
+                if (*current.as_ptr()).front == None {
+                    return LinkedList::new()
+                }
+
+                let old_len = self.list.len;
+                let old_front = self.list.front;
+
+                self.list.len -= self.index.unwrap();
+                self.list.front = Some(current);
+                self.index = Some(0);
+
+                let new_back = (*current.as_ptr()).front.take();
+                (*new_back.unwrap().as_ptr()).back = None;
+
+                LinkedList {
+                    front: old_front,
+                    back: new_back,
+                    len: old_len - self.list.len,
+                    _marker: PhantomData
+                }
+            }
+        }else {
+            mem::replace(self.list, LinkedList::new())
+        }
+    }
+
+    pub fn split_after(&mut self) -> LinkedList<T> {
+        if let Some(current) = self.node {    
+            unsafe {
+                if (*current.as_ptr()).back == None {
+                    return LinkedList::new()
+                }
+
+                let old_len = self.list.len;
+                let old_back = self.list.back;
+
+                self.list.len -= self.index.unwrap();
+                self.list.back = Some(current);
+                self.index = Some(self.list.len - 1);
+
+                let new_front = (*current.as_ptr()).back.take();
+                (*new_front.unwrap().as_ptr()).front = None;
+
+                LinkedList {
+                    front: new_front,
+                    back: old_back,
+                    len: old_len - self.list.len,
+                    _marker: PhantomData
+                }
+            }
+        }else {
+            mem::replace(self.list, LinkedList::new())
+        }
+    }
 }
 
 /// Doc test that will fail in order to prove that `IterMut<'_, T>` is invariant,
-/// meaning we can't change the lifetime of our type `T` because we "contain" `&mut`
-/// reference to `T` as marked with `_marker` field (`PhantomData<&mut T>`) making our type invariant.
+/// meaning we can't change the lifetime of our type `T` because IterMut<'_, T> "contains" `&mut`
+/// reference to `T` as marked with `_marker` field (`PhantomData<&mut T>`) making our `IterMut` type invariant.
 ///
 /// ```compile_fail
 /// use linked_lists_rust::production_queue_unsafe::IterMut;
