@@ -527,6 +527,93 @@ impl<T> CursorMut<'_, T> {
             mem::replace(self.list, LinkedList::new())
         }
     }
+
+    pub fn splice_before(&mut self, mut other: LinkedList<T>) {
+        if other.is_empty() {
+            return;
+        }else if let Some(current) = self.node {
+            let other_front = other.front.take().unwrap();
+            let other_back = other.back.take().unwrap();
+            if let Some(0) = self.index {
+                unsafe { 
+                    (*other_back.as_ptr()).back = Some(current);
+                    (*current.as_ptr()).front = Some(other_back);
+                }
+                self.list.front = Some(other_front);            
+            }else {
+                unsafe {
+                    // Our list: A B C D, other list: 1 2 3 4.
+                    // Lets say cursor points to B, like this [A, B(curr), C, D]
+                    // We then will insert other list in between B and C.
+                    // Like this: [A, B, 1, 2, 3, 4, C, D]
+                    // We need to first make connection from B to 1 both ways!
+                    // Set other.back.back to point to current(B) node, and current.front to other.back(1).
+                    (*other_back.as_ptr()).back = Some(current);
+                    (*current.as_ptr()).front = Some(other_back);
+                    // Now our list looks like this: [A, B, 1, 2, 3, 4, None] but C needs to be fixed.
+                    // C.back needs to point to other.front and other.front needs to point to C (4 -> C, 4 <- C.back).
+                    let current_front = (*current.as_ptr()).front.unwrap();
+                    (*current_front.as_ptr()).back = Some(other_front);
+                    (*other_front.as_ptr()).front = Some(current_front);
+                }
+            }
+            *self.index.as_mut().unwrap() += other.len;  
+        }else if let Some(back) = self.list.back {
+            let other_back = other.back.take().unwrap();
+            let other_front = other.front.take().unwrap();
+
+            unsafe {
+                (*other_front.as_ptr()).front = Some(back);
+                (*back.as_ptr()).back = Some(other_front);
+            }
+            self.list.back = Some(other_back);
+        }else {
+            mem::swap(self.list, &mut other);
+            return;
+        }
+        self.list.len += other.len;   
+        other.len = 0;
+    }
+
+    // pub fn splice_after(&mut self, mut other: LinkedList<T>) {
+    //     if other.is_empty() {
+    //         return;
+    //     }else if let Some(current) = self.node {
+    //         let other_front = other.front.take().unwrap();
+    //         let other_back = other.back.take().unwrap();
+    //         if let Some(0) = self.index {
+    //             unsafe { 
+    //                 (*other_back.as_ptr()).back = Some(current);
+    //                 (*current.as_ptr()).front = Some(other_back);
+    //             }
+    //             self.list.front = Some(other_front);            
+    //         }else {
+    //             unsafe {
+    //                 (*other_back.as_ptr()).back = Some(current);
+    //                 (*current.as_ptr()).front = Some(other_back);
+
+    //                 let current_front = (*current.as_ptr()).front.unwrap();
+    //                 (*current_front.as_ptr()).back = Some(other_front);
+    //                 (*other_front.as_ptr()).front = Some(current_front);
+    //             }
+    //         }
+    //         *self.index.as_mut().unwrap() += other.len;  
+    //     }else if let Some(back) = self.list.back {
+    //         let other_back = other.back.take().unwrap();
+    //         let other_front = other.front.take().unwrap();
+
+    //         unsafe {
+    //             (*other_front.as_ptr()).front = Some(back);
+    //             (*back.as_ptr()).back = Some(other_front);
+    //         }
+    //         self.list.back = Some(other_back);
+    //     }else {
+    //         mem::swap(self.list, &mut other);
+    //         return;
+    //     }
+    //     self.list.len += other.len;   
+    //     other.len = 0;
+    // }
 }
 
 /// Doc test that will fail in order to prove that `IterMut<'_, T>` is invariant,
