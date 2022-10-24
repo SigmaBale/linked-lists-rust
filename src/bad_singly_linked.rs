@@ -2,7 +2,7 @@
 use std::mem;
 
 pub struct List {
-    head: Link
+    head: Link,
 }
 
 impl List {
@@ -13,22 +13,28 @@ impl List {
     pub fn push(&mut self, value: i32) {
         let new_node = Box::new(Node {
             element: value,
-            next: self.pop_node()
+            next: self.pop_node(),
         });
         self.head = Link::Element(new_node);
     }
-    
+
     pub fn pop(&mut self) -> Option<i32> {
         if let Link::Element(node) = self.pop_node() {
             self.head = node.next;
             Some(node.element)
-        }else {
+        } else {
             None
         }
     }
 
     fn pop_node(&mut self) -> Link {
         mem::replace(&mut self.head, Link::Empty)
+    }
+}
+
+impl Default for List {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -42,14 +48,13 @@ impl Drop for List {
 
 enum Link {
     Empty,
-    Element(Box<Node>)
+    Element(Box<Node>),
 }
 
 struct Node {
     element: i32,
-    next: Link
+    next: Link,
 }
-
 
 #[cfg(test)]
 mod test {
@@ -57,7 +62,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn test_basics_bad_singly_linked() {
+    fn test_basics() {
         let mut list = List::new();
 
         // populating list
@@ -81,5 +86,4 @@ mod test {
         list.push(3);
         list.push(4);
     }
-
 }

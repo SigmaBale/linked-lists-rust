@@ -5,11 +5,11 @@ type Link<T> = Option<Rc<Node<T>>>;
 
 struct Node<T> {
     elem: T,
-    next: Link<T>
+    next: Link<T>,
 }
 
 struct List<T> {
-    head: Link<T>
+    head: Link<T>,
 }
 
 impl<T> List<T> {
@@ -18,15 +18,18 @@ impl<T> List<T> {
     }
 
     pub fn prepend(&self, elem: T) -> List<T> {
-        List { 
+        List {
             head: Some(Rc::new(Node {
-                    elem: elem,
-                    next: self.head.clone()
-                }))}
+                elem,
+                next: self.head.clone(),
+            })),
+        }
     }
-    
+
     pub fn tail(&self) -> List<T> {
-        List { head: self.head.as_ref().and_then(|node| node.next.clone()) }
+        List {
+            head: self.head.as_ref().and_then(|node| node.next.clone()),
+        }
     }
 
     pub fn head(&self) -> Option<&T> {
@@ -39,7 +42,7 @@ impl<T> Drop for List<T> {
         while let Some(rc_node) = self.head.take() {
             if let Ok(node) = Rc::try_unwrap(rc_node) {
                 self.head = node.next;
-            }else {
+            } else {
                 break;
             }
         }
@@ -47,7 +50,7 @@ impl<T> Drop for List<T> {
 }
 
 pub struct Iter<'a, T> {
-    next: Option<&'a Node<T>>
+    next: Option<&'a Node<T>>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -62,7 +65,9 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
 impl<T> List<T> {
     pub fn iter(&self) -> Iter<'_, T> {
-        Iter { next: self.head.as_deref() }
+        Iter {
+            next: self.head.as_deref(),
+        }
     }
 }
 
@@ -71,7 +76,7 @@ mod test {
     use super::List;
 
     #[test]
-    fn test_basics_rc_singly_linked() {
+    fn test_basics() {
         let list = List::new();
         assert_eq!(list.head(), None);
 
@@ -92,7 +97,7 @@ mod test {
     }
 
     #[test]
-    fn test_iter_rc_singly_linked() {
+    fn test_iter() {
         let list = List::new().prepend(1).prepend(2).prepend(3);
 
         let mut iter = list.iter();

@@ -2,13 +2,13 @@
 
 struct Node<T> {
     element: T,
-    next: Link<T>
+    next: Link<T>,
 }
 
 type Link<T> = Option<Box<Node<T>>>;
 
 pub struct List<T> {
-    head: Link<T>
+    head: Link<T>,
 }
 
 impl<T> List<T> {
@@ -19,11 +19,11 @@ impl<T> List<T> {
     pub fn push(&mut self, value: T) {
         let new_node = Box::new(Node {
             element: value,
-            next: self.head.take()
+            next: self.head.take(),
         });
         self.head = Some(new_node);
     }
-    
+
     pub fn pop(&mut self) -> Option<T> {
         self.head.take().map(|node| {
             self.head = node.next;
@@ -34,21 +34,27 @@ impl<T> List<T> {
     pub fn peek(&self) -> Option<&T> {
         self.head.as_ref().map(|node| &node.element)
     }
-    
+
     pub fn peek_mut(&mut self) -> Option<&mut T> {
         self.head.as_mut().map(|node| &mut node.element)
     }
 
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter(self)
-    }
-
     pub fn iter(&self) -> Iter<'_, T> {
-        Iter { next: self.head.as_deref() }
+        Iter {
+            next: self.head.as_deref(),
+        }
     }
 
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut { next: self.head.as_deref_mut() }
+        IterMut {
+            next: self.head.as_deref_mut(),
+        }
+    }
+}
+
+impl<T> Default for List<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -57,6 +63,15 @@ impl<T> Drop for List<T> {
         while let Some(boxed_node) = self.head.take() {
             self.head = boxed_node.next;
         }
+    }
+}
+
+impl<T> IntoIterator for List<T> {
+    type IntoIter = IntoIter<T>;
+    type Item = T;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter(self)
     }
 }
 
@@ -70,7 +85,7 @@ impl<T> Iterator for IntoIter<T> {
 }
 
 pub struct Iter<'a, T> {
-    next: Option<&'a Node<T>>
+    next: Option<&'a Node<T>>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -84,8 +99,8 @@ impl<'a, T> Iterator for Iter<'a, T> {
 }
 
 pub struct IterMut<'a, T> {
-    next: Option<&'a mut Node<T>>
-} 
+    next: Option<&'a mut Node<T>>,
+}
 
 impl<'a, T> Iterator for IterMut<'a, T> {
     type Item = &'a mut T;
@@ -132,27 +147,29 @@ mod test {
     }
 
     #[test]
-    fn test_peek_ok_singly_linked() {
+    fn test_peek() {
         let mut list = List::new();
         assert_eq!(list.peek(), None);
         assert_eq!(list.peek_mut(), None);
-        list.push(1); list.push(2); list.push(3);
+        list.push(1);
+        list.push(2);
+        list.push(3);
 
         assert_eq!(list.peek(), Some(&3));
         assert_eq!(list.peek_mut(), Some(&mut 3));
 
-        list.peek_mut().map(|value| {
-            *value = 42
-        });
-    
+        list.peek_mut().map(|value| *value = 42);
+
         assert_eq!(list.peek(), Some(&42));
         assert_eq!(list.pop(), Some(42));
     }
 
     #[test]
-    fn test_into_iterator_ok_singly_linked() {
+    fn test_into_iterator() {
         let mut list = List::new();
-        list.push(1); list.push(2); list.push(3);
+        list.push(1);
+        list.push(2);
+        list.push(3);
 
         let mut iter = list.into_iter();
         assert_eq!(iter.next(), Some(3));
@@ -163,10 +180,12 @@ mod test {
     }
 
     #[test]
-    fn test_iter_ok_singly_linked() {
+    fn test_iter() {
         let mut list = List::new();
-        list.push(1); list.push(2); list.push(3);
-    
+        list.push(1);
+        list.push(2);
+        list.push(3);
+
         let mut iter = list.iter();
         assert_eq!(iter.next(), Some(&3));
         assert_eq!(iter.next(), Some(&2));
@@ -174,9 +193,11 @@ mod test {
     }
 
     #[test]
-    fn test_iter_mut_ok_singly_linked() {
+    fn test_iter_mut() {
         let mut list = List::new();
-        list.push(1); list.push(2); list.push(3);
+        list.push(1);
+        list.push(2);
+        list.push(3);
 
         let mut iter = list.iter_mut();
         assert_eq!(iter.next(), Some(&mut 3));

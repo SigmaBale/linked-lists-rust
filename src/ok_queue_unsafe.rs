@@ -1,10 +1,10 @@
 #![allow(dead_code)]
-use std::ptr;
 use std::marker::PhantomData;
+use std::ptr;
 
 struct Node<T> {
     elem: T,
-    next: Link<T>
+    next: Link<T>,
 }
 
 type Link<T> = *mut Node<T>;
@@ -16,19 +16,21 @@ pub struct List<T> {
 
 impl<T> List<T> {
     pub fn new() -> Self {
-        List { head: ptr::null_mut(), tail: ptr::null_mut() }
+        List {
+            head: ptr::null_mut(),
+            tail: ptr::null_mut(),
+        }
     }
 
     pub fn push(&mut self, elem: T) {
-        let new_tail = Box::into_raw(Box::new(
-            Node { elem, next: ptr::null_mut() }
-        ));
+        let new_tail = Box::into_raw(Box::new(Node {
+            elem,
+            next: ptr::null_mut(),
+        }));
 
         if !self.tail.is_null() {
-            unsafe { 
-                (*self.tail).next = new_tail 
-            }
-        }else {
+            unsafe { (*self.tail).next = new_tail }
+        } else {
             self.head = new_tail
         }
 
@@ -47,62 +49,77 @@ impl<T> List<T> {
 
                 Some(old_head.elem)
             }
-        }else {
+        } else {
             None
         }
     }
 
     pub fn peek(&self) -> Option<&'_ T> {
-        if self.head.is_null() { None }
-        else {
-            unsafe {
-                Some(&(*self.head).elem)
-            }
+        if self.head.is_null() {
+            None
+        } else {
+            unsafe { Some(&(*self.head).elem) }
         }
     }
 
     pub fn peek_mut(&mut self) -> Option<&'_ mut T> {
-        if self.head.is_null() { None }
-        else {
-            unsafe {
-                Some(&mut(*self.head).elem)
-            }
+        if self.head.is_null() {
+            None
+        } else {
+            unsafe { Some(&mut (*self.head).elem) }
         }
     }
 
-    pub fn into_iter(self) -> IntoIter<T> {
-        IntoIter { next: self }
-    }
-
     pub fn iter(&self) -> Iter<'_, T> {
-        Iter { next: self.head, _marker: PhantomData }
+        Iter {
+            next: self.head,
+            _marker: PhantomData,
+        }
     }
 
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
-        IterMut { next: self.head, _marker: PhantomData }
+        IterMut {
+            next: self.head,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T> Default for List<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> IntoIterator for List<T> {
+    type IntoIter = IntoIter<T>;
+    type Item = T;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter { next: self }
     }
 }
 
 impl<T> Drop for List<T> {
     fn drop(&mut self) {
-        while let Some(_) = self.pop() {}
+        while self.pop().is_some() {}
     }
 }
 
 pub struct IntoIter<T> {
-    next: List<T>
+    next: List<T>,
 }
 
 impl<T> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        self.next.pop().map(|val| val)
+        self.next.pop()
     }
 }
 
 pub struct Iter<'a, T: 'a> {
     next: *mut Node<T>,
-    _marker: PhantomData<&'a T>
+    _marker: PhantomData<&'a T>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
@@ -119,7 +136,7 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
 pub struct IterMut<'a, T: 'a> {
     next: *mut Node<T>,
-    _marker: PhantomData<&'a mut T>
+    _marker: PhantomData<&'a mut T>,
 }
 
 impl<'a, T> Iterator for IterMut<'a, T> {
@@ -138,7 +155,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
 mod test {
     use super::List;
     #[test]
-    fn test_basics_ok_queue_unsafe() {
+    fn test_basics() {
         let mut list = List::new();
 
         assert_eq!(list.pop(), None);
@@ -168,7 +185,7 @@ mod test {
     }
 
     #[test]
-    fn test_iter_ok_queue_unsafe() {
+    fn test_iter() {
         let mut list = List::new();
         list.push(1);
         list.push(2);
@@ -189,7 +206,7 @@ mod test {
     }
 
     #[test]
-    fn test_iter_mut_ok_queue_unsafe() {
+    fn test_iter_mut() {
         let mut list = List::new();
         list.push(1);
         list.push(2);
@@ -210,7 +227,7 @@ mod test {
     }
 
     #[test]
-    fn test_into_iter_ok_queue_unsafe() {
+    fn test_into_iter() {
         let mut list = List::new();
         list.push(1);
         list.push(2);
@@ -231,9 +248,9 @@ mod test {
     }
 
     #[test]
-    fn test_peek_and_peek_mut_ok_queue_unsafe() {
+    fn test_peek_and_peek_mut() {
         let mut list = List::new();
-        
+
         list.push(1);
         list.push(2);
         list.push(3);
@@ -250,7 +267,7 @@ mod test {
     }
 
     #[test]
-    fn test_miri_mixup_ok_queue_unsafe() {
+    fn test_miri_mixup() {
         let mut list = List::new();
 
         list.push(1);
@@ -285,4 +302,3 @@ mod test {
         list.push(7);
     }
 }
-
